@@ -3,8 +3,8 @@ import PaperFeed from "@/components/PaperFeed";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
-  const papers = getUnswiped();
+export default async function Home() {
+  const papers = await getUnswiped();
 
   return (
     <div className="flex flex-col h-screen max-h-screen overflow-hidden">

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
 
   const papers = await fetchDiffusionPapers();
   for (const p of papers) {
-    upsertPaper(p);
+    await upsertPaper(p);
   }
 
   return NextResponse.json({ fetched: papers.length });
