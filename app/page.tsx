@@ -1,7 +1,9 @@
-import { getUnswiped } from "@/lib/db";
+import { getUnswiped, upsertPaper } from "@/lib/db";
+import { fetchDiffusionPapers } from "@/lib/arxiv";
 import PaperFeed from "@/components/PaperFeed";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export default async function Home() {
   let papers: Awaited<ReturnType<typeof getUnswiped>> = [];
@@ -12,6 +14,11 @@ export default async function Home() {
   } else {
     try {
       papers = await getUnswiped();
+      if (papers.length === 0) {
+        const fetched = await fetchDiffusionPapers();
+        for (const p of fetched) await upsertPaper(p);
+        papers = await getUnswiped();
+      }
     } catch (err) {
       dbError = err instanceof Error ? err.message : "Database error";
     }
