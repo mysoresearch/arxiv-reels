@@ -9,7 +9,7 @@ export async function POST(
   if (isNaN(id)) return NextResponse.json({ error: "invalid id" }, { status: 400 });
 
   const body = await request.json();
-  swipePaper(id, Boolean(body.liked));
+  await swipePaper(id, Boolean(body.liked));
 
   return NextResponse.json({ ok: true });
 }

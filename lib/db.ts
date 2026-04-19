@@ -1,31 +1,4 @@
-import Database from "better-sqlite3";
-import path from "path";
-import fs from "fs";
-
-const DB_PATH = process.env.DB_PATH ?? "./data/papers.db";
-
-function getDb(): Database.Database {
-  const resolved = path.resolve(DB_PATH);
-  fs.mkdirSync(path.dirname(resolved), { recursive: true });
-  const db = new Database(resolved);
-  db.pragma("journal_mode = WAL");
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS papers (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      arxiv_id    TEXT    UNIQUE NOT NULL,
-      title       TEXT    NOT NULL,
-      abstract    TEXT    NOT NULL,
-      authors     TEXT    NOT NULL,
-      categories  TEXT    NOT NULL,
-      published   TEXT    NOT NULL,
-      url         TEXT    NOT NULL,
-      fetched_at  TEXT    NOT NULL DEFAULT (datetime('now')),
-      swiped      INTEGER NOT NULL DEFAULT 0,
-      liked       INTEGER
-    );
-  `);
-  return db;
-}
+import { sql } from "@vercel/postgres";
 
 export interface Paper {
   id: number;
@@ -41,35 +14,52 @@ export interface Paper {
   liked: number | null;
 }
 
-export function getUnswiped(limit = 50): Paper[] {
-  const db = getDb();
-  return db
-    .prepare(
-      "SELECT * FROM papers WHERE swiped = 0 ORDER BY published DESC LIMIT ?"
+async function ensureSchema(): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS papers (
+      id          SERIAL PRIMARY KEY,
+      arxiv_id    TEXT    UNIQUE NOT NULL,
+      title       TEXT    NOT NULL,
+      abstract    TEXT    NOT NULL,
+      authors     TEXT    NOT NULL,
+      categories  TEXT    NOT NULL,
+      published   TEXT    NOT NULL,
+      url         TEXT    NOT NULL,
+      fetched_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      swiped      INTEGER NOT NULL DEFAULT 0,
+      liked       INTEGER
     )
-    .all(limit) as Paper[];
+  `;
 }
 
-export function swipePaper(id: number, liked: boolean): void {
-  const db = getDb();
-  db.prepare("UPDATE papers SET swiped = 1, liked = ? WHERE id = ?").run(
-    liked ? 1 : 0,
-    id
-  );
+export async function getUnswiped(limit = 50): Promise<Paper[]> {
+  await ensureSchema();
+  const { rows } = await sql<Paper>`
+    SELECT * FROM papers WHERE swiped = 0 ORDER BY published DESC LIMIT ${limit}
+  `;
+  return rows;
 }
 
-export function getLiked(): Paper[] {
-  const db = getDb();
-  return db
-    .prepare("SELECT * FROM papers WHERE liked = 1 ORDER BY published DESC")
-    .all() as Paper[];
+export async function swipePaper(id: number, liked: boolean): Promise<void> {
+  const likedVal = liked ? 1 : 0;
+  await sql`UPDATE papers SET swiped = 1, liked = ${likedVal} WHERE id = ${id}`;
 }
 
-export function upsertPaper(paper: Omit<Paper, "id" | "fetched_at" | "swiped" | "liked">): void {
-  const db = getDb();
-  db.prepare(`
+export async function getLiked(): Promise<Paper[]> {
+  await ensureSchema();
+  const { rows } = await sql<Paper>`
+    SELECT * FROM papers WHERE liked = 1 ORDER BY published DESC
+  `;
+  return rows;
+}
+
+export async function upsertPaper(
+  paper: Omit<Paper, "id" | "fetched_at" | "swiped" | "liked">
+): Promise<void> {
+  await ensureSchema();
+  await sql`
     INSERT INTO papers (arxiv_id, title, abstract, authors, categories, published, url)
-    VALUES (@arxiv_id, @title, @abstract, @authors, @categories, @published, @url)
+    VALUES (${paper.arxiv_id}, ${paper.title}, ${paper.abstract}, ${paper.authors}, ${paper.categories}, ${paper.published}, ${paper.url})
     ON CONFLICT(arxiv_id) DO NOTHING
-  `).run(paper);
+  `;
 }
