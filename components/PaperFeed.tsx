@@ -13,6 +13,7 @@ export default function PaperFeed({ initialPapers }: Props) {
   const [index, setIndex] = useState(0);
   const [likedCount, setLikedCount] = useState(0);
   const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [tab, setTab] = useState<"feed" | "liked">("feed");
   const [likedPapers, setLikedPapers] = useState<Paper[]>([]);
 
@@ -33,11 +34,18 @@ export default function PaperFeed({ initialPapers }: Props) {
 
   const triggerFetch = async () => {
     setFetching(true);
+    setFetchError(null);
     try {
-      await fetch("/api/fetch-papers");
+      const fetchRes = await fetch("/api/fetch-papers");
+      if (!fetchRes.ok) {
+        const body = await fetchRes.json().catch(() => ({}));
+        throw new Error(`fetch-papers ${fetchRes.status}: ${body.error ?? "unknown"}`);
+      }
       const res = await fetch("/api/papers");
       setPapers(await res.json());
       setIndex(0);
+    } catch (e) {
+      setFetchError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setFetching(false);
     }
@@ -118,6 +126,9 @@ export default function PaperFeed({ initialPapers }: Props) {
                 >
                   {fetching ? "Fetching…" : "Fetch Latest Papers"}
                 </button>
+                {fetchError && (
+                  <p className="text-xs text-red-400 max-w-xs">{fetchError}</p>
+                )}
               </div>
             )}
 
