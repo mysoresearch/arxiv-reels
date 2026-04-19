@@ -12,7 +12,7 @@ export interface ArxivPaper {
 
 const ARXIV_API = "https://export.arxiv.org/api/query";
 
-const QUERIES = [
+const BASE_QUERIES = [
   // Image generation
   'cat:cs.CV AND ti:"diffusion model"',
   'cat:cs.CV AND ti:"image generation"',
@@ -30,13 +30,23 @@ const QUERIES = [
   'cat:cs.CL AND ti:"large language model"',
 ];
 
+// arXiv date range covering the last 4 days to handle weekends/holidays
+function dateRangeFilter(): string {
+  const end = new Date();
+  const start = new Date(end.getTime() - 4 * 24 * 60 * 60 * 1000);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+  return `submittedDate:[${fmt(start)}0000 TO ${fmt(end)}2359]`;
+}
+
 export async function fetchLatestPapers(): Promise<ArxivPaper[]> {
   const seen = new Set<string>();
   const papers: ArxivPaper[] = [];
 
-  for (const q of QUERIES) {
+  const dateFilter = dateRangeFilter();
+
+  for (const q of BASE_QUERIES) {
     const url = new URL(ARXIV_API);
-    url.searchParams.set("search_query", q);
+    url.searchParams.set("search_query", `${q} AND ${dateFilter}`);
     url.searchParams.set("sortBy", "submittedDate");
     url.searchParams.set("sortOrder", "descending");
     url.searchParams.set("max_results", "25");

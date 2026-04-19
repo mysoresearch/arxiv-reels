@@ -32,10 +32,16 @@ async function ensureSchema(): Promise<void> {
   `;
 }
 
-export async function getUnswiped(limit = 50): Promise<Paper[]> {
+export async function getUnswiped(limit = 200): Promise<Paper[]> {
   await ensureSchema();
+  const { rows: latest } = await sql`
+    SELECT published FROM papers ORDER BY published DESC LIMIT 1
+  `;
+  if (latest.length === 0) return [];
+  const latestDate = (latest[0] as { published: string }).published;
   const { rows } = await sql<Paper>`
-    SELECT * FROM papers WHERE swiped = 0 ORDER BY published DESC LIMIT ${limit}
+    SELECT * FROM papers WHERE swiped = 0 AND published = ${latestDate}
+    ORDER BY id DESC LIMIT ${limit}
   `;
   return rows;
 }
