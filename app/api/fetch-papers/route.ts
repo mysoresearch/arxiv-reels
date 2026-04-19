@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchDiffusionPapers } from "@/lib/arxiv";
+import { fetchLatestPapers } from "@/lib/arxiv";
 import { upsertPaper } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const papers = await fetchDiffusionPapers();
+  const papers = await fetchLatestPapers();
   for (const p of papers) {
     await upsertPaper(p);
   }

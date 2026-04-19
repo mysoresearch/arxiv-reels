@@ -13,13 +13,24 @@ export interface ArxivPaper {
 const ARXIV_API = "https://export.arxiv.org/api/query";
 
 const QUERIES = [
+  // Image generation
   'cat:cs.CV AND ti:"diffusion model"',
-  'cat:cs.LG AND ti:"diffusion model"',
-  'cat:cs.CV AND ti:"score-based"',
-  'cat:cs.CV AND ti:"denoising diffusion"',
+  'cat:cs.CV AND ti:"image generation"',
+  // Video generation
+  'cat:cs.CV AND ti:"video generation"',
+  'cat:cs.CV AND ti:"video diffusion"',
+  // Audio generation
+  'cat:cs.SD AND ti:"diffusion"',
+  'cat:eess.AS AND ti:"generation"',
+  // 3D generation
+  'cat:cs.CV AND ti:"3D generation"',
+  'cat:cs.CV AND ti:"gaussian splatting"',
+  // Language models
+  'cat:cs.CL AND ti:"language model"',
+  'cat:cs.CL AND ti:"large language model"',
 ];
 
-export async function fetchDiffusionPapers(): Promise<ArxivPaper[]> {
+export async function fetchLatestPapers(): Promise<ArxivPaper[]> {
   const seen = new Set<string>();
   const papers: ArxivPaper[] = [];
 

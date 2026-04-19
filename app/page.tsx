@@ -1,5 +1,5 @@
 import { getUnswiped, upsertPaper } from "@/lib/db";
-import { fetchDiffusionPapers } from "@/lib/arxiv";
+import { fetchLatestPapers } from "@/lib/arxiv";
 import PaperFeed from "@/components/PaperFeed";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export default async function Home() {
     try {
       papers = await getUnswiped();
       if (papers.length === 0) {
-        const fetched = await fetchDiffusionPapers();
+        const fetched = await fetchLatestPapers();
         for (const p of fetched) await upsertPaper(p);
         papers = await getUnswiped();
       }
@@ -30,7 +30,7 @@ export default async function Home() {
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
             <h1 className="text-xl font-bold text-white tracking-tight">
-              Diffusion Daily
+              AI Paper Feed
             </h1>
             <p className="text-xs text-white/40 mt-0.5">arXiv · refreshed daily</p>
           </div>

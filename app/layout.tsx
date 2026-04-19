@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Diffusion Daily",
-  description: "Swipe through the latest diffusion model papers from arXiv",
+  title: "AI Paper Feed",
+  description: "Swipe through the latest AI papers on diffusion, generation, and language models",
   icons: { icon: "/favicon.ico" },
 };
 
