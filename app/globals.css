@@ -1,0 +1,63 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --card-height: min(560px, 80svh);
+}
+
+html,
+body {
+  height: 100%;
+  background-color: #0f0f13;
+  color: #e8e8f0;
+  font-family: "Inter", system-ui, sans-serif;
+  overscroll-behavior: none;
+}
+
+.card-stack {
+  position: relative;
+  width: 100%;
+  height: var(--card-height);
+}
+
+.swipe-card {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.swipe-card:active {
+  cursor: grabbing;
+}
+
+.stamp {
+  position: absolute;
+  top: 1.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  border-width: 3px;
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.1s;
+  text-transform: uppercase;
+}
+
+.stamp-like {
+  right: 1.5rem;
+  color: #22c55e;
+  border-color: #22c55e;
+}
+
+.stamp-nope {
+  left: 1.5rem;
+  color: #ef4444;
+  border-color: #ef4444;
+}
